@@ -12,7 +12,6 @@
 #include "response.c"
 #include "tcp.c"
 
-#define BUF_SIZE 1024
 #define ARENA_SIZE 1024
 
 int main() 
