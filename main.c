@@ -1,110 +1,77 @@
-#include <string.h>
+#include <netinet/in.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <sys/signal.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
+#include <unistd.h>
 
-#include "string.c"
+#include "arena.c"
+#include "request.c"
+#include "response.c"
+#include "tcp.c"
 
-#define PORT 8080
-#define LISTEN_BACKLOG 128
+#define BUF_SIZE 1024
+#define ARENA_SIZE 1024
 
-typedef enum {
-  GET,
-  HEAD,
-} Method;
+int main() 
+{
+    int socket_fd = get_tcp_socket();
+ 
+    printf("Listening at http://localhost:%d\n", PORT);
+ 
+    struct sockaddr_storage client_address;
+ 
+    for (;;) {
+        socklen_t addr_size = sizeof(client_address);
+        memset(&client_address, 0, addr_size);
+       
+        int conn_fd = accept(socket_fd, (struct sockaddr *)&client_address, &addr_size);
+       
+        if (conn_fd < 0) {
+          perror("accept");
+          return EXIT_FAILURE;
+        }
 
-typedef struct {
-  Method method;
-} Request;
+	printf("========== Incoming request ========== \n");
+        print_address(&client_address);
 
-int get_tcp_socket() {
-  int socket_fd;
-  int yes = 1;
+	// Create file stream for reading 
+	FILE *read_stream = fdopen(dup(conn_fd), "r");
+	if (read_stream == NULL) {
+	    perror("fdopen");
+	    return EXIT_FAILURE;
+	}
 
-  if ((socket_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-    perror("socket");
-    exit(EXIT_FAILURE);
-  }
+	// Initialize arena allocator
+	Arena arena;
+	arena_init(&arena, ARENA_SIZE);
+       
+        // read request
+	Request req = {0};
+        if (!process_request(&arena, read_stream, &req))
+            return EXIT_FAILURE;
+	print_request(&req);
+	fclose(read_stream);
+       
+	// Create file stream for writing 
+	FILE *write_stream = fdopen(dup(conn_fd), "w");
+	if (write_stream == NULL) {
+	    perror("fdopen");
+	    return EXIT_FAILURE;
+	}
 
-  if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) < 0) {
-    perror("setsockopt");
-    exit(EXIT_FAILURE);
-  }
+        // write request
+	send_response(&arena, write_stream, &req);
 
-  struct sockaddr_in hostaddr = {0};
-  hostaddr.sin_family = AF_INET;
-  hostaddr.sin_addr.s_addr = INADDR_ANY;
-  hostaddr.sin_port = htons(PORT);
 
-  if ((bind(socket_fd, (struct sockaddr *)&hostaddr, sizeof(struct sockaddr_in))) <
-      0) {
-    perror("bind");
-    exit(EXIT_FAILURE);
-  }
-
-  if ((listen(socket_fd, LISTEN_BACKLOG)) < 0) {
-    perror("listen");
-    exit(EXIT_FAILURE);
-  }
-
-  return socket_fd;
-}
-
-int main() {
-  int socket_fd = get_tcp_socket();
-
-  printf("Listening at http://localhost:%d\n", PORT);
-
-  struct sockaddr_storage client_address;
-  char *line = NULL;
-  size_t linecap = 0;
-  ssize_t linelen;
-
-  for (;;) {
-    socklen_t addr_size = sizeof(client_address);
-    memset(&client_address, 0, addr_size);
-
-    int conn_fd = accept(socket_fd, (struct sockaddr *)&client_address, &addr_size);
-
-    if (conn_fd < 0) {
-      perror("accept");
-      return 1;
+	fflush(write_stream);
+	fclose(write_stream);
+	close(conn_fd);
+	arena_free(&arena);
     }
-
-    FILE *stream = fdopen(conn_fd, "r+");
-
-    if (stream == NULL) {
-      perror("fdopen");
-      return 1;
-    }
-
-    // Get general header GET / HTTP/1.1
-
-    while ((linelen = getline(&line, &linecap, stream)) > 0) {
-      printf("Capacity %lu\t\t%s", linecap, line);
-
-      if (strcmp(line, "\r\n") == 0) {
-	break;
-      }
-    }
-
-    if (feof(stream)) {
-      printf("EOF reached\n");
-    }
-
-    if (ferror(stream)) {
-      perror("getline");
-      return 1;
-    }
-
-    fprintf(stream, "HTTP/1.1 200 OK\r\n\r\n<div>Hello, world!</div>");
-    fflush(stream);
-
-    memset(line, 0, linecap);
-    fclose(stream);
-  }
-
-
-  return 0;
+ 
+    close(socket_fd);
+    return EXIT_SUCCESS;
 }
