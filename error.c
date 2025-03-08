@@ -11,13 +11,13 @@ void print_stderr(const char *msg)
 
 bool error_false(const char *msg)
 {
-  print_stderr(msg);
-  return false;
+    print_stderr(msg);
+    return false;
 }
 
 void error_fail(const char* msg)
 {
-  print_stderr(msg);
+    print_stderr(msg);
     exit(EXIT_FAILURE);
 }
 
@@ -29,7 +29,7 @@ void *error_null(const char *msg)
 
 bool perror_false(const char *msg)
 {
-  perror(msg);
-  return false;
+    perror(msg);
+    return false;
 }
 
