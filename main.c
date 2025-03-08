@@ -21,9 +21,13 @@ int main()
     printf("Listening at http://localhost:%d\n", PORT);
  
     struct sockaddr_storage client_address;
+    socklen_t addr_size = sizeof(client_address);
+    
+    // Initialize arena allocator
+    Arena arena;
+    arena_init(&arena, ARENA_SIZE);
  
     for (;;) {
-        socklen_t addr_size = sizeof(client_address);
         memset(&client_address, 0, addr_size);
        
         int conn_fd = accept(socket_fd, (struct sockaddr *)&client_address, &addr_size);
@@ -43,16 +47,13 @@ int main()
 	    return EXIT_FAILURE;
 	}
 
-	// Initialize arena allocator
-	Arena arena;
-	arena_init(&arena, ARENA_SIZE);
        
         // read request
 	Request req = {0};
-        if (!process_request(&arena, read_stream, &req))
-            return EXIT_FAILURE;
-	print_request(&req);
+        if (!process_request(&arena, read_stream, &req)) return EXIT_FAILURE;
 	fclose(read_stream);
+
+	print_request(&req);
        
 	// Create file stream for writing 
 	FILE *write_stream = fdopen(dup(conn_fd), "w");
@@ -65,12 +66,12 @@ int main()
 	send_response(&arena, write_stream, &req);
 
 
-	fflush(write_stream);
 	fclose(write_stream);
 	close(conn_fd);
-	arena_free(&arena);
+	arena_reset(&arena);
     }
  
+    arena_free(&arena);
     close(socket_fd);
     return EXIT_SUCCESS;
 }

@@ -40,6 +40,10 @@ bool arena_free(Arena *arena) {
   return true;
 }
 
+void arena_reset(Arena *arena) {
+    arena->offset = 0;
+}
+
 bool arena_grow(Arena *arena, size_t new_size) {
     if (new_size < arena->capacity) return true;
 
