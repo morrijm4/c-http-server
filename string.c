@@ -10,7 +10,7 @@ typedef struct {
   int len;
 } String;
 
-String String_from(const char *ptr, int len) {
+String str_from(const char *ptr, int len) {
   String str;
 
   str.ptr = ptr;
@@ -19,11 +19,11 @@ String String_from(const char *ptr, int len) {
   return str;
 }
 
-String String_from_cstr(const char *ptr) {
-  return String_from(ptr, strlen(ptr));
+String str_from_cstr(const char *ptr) {
+  return str_from(ptr, strlen(ptr));
 }
 
-bool String_eq(String a, String b) {
+bool str_eq(String a, String b) {
   if (a.len != b.len) {
     return false;
   } else {
@@ -31,7 +31,7 @@ bool String_eq(String a, String b) {
   }
 }
 
-bool String_try_chop_by_delim(String *str, char delim, String *result) {
+bool str_try_chop_by_delim(String *str, char delim, String *result) {
   int i = 0;
   while (i < str->len && str->ptr[i] != delim) {
     i += 1;
@@ -42,7 +42,7 @@ bool String_try_chop_by_delim(String *str, char delim, String *result) {
   }
 
   if (result != NULL) {
-    *result = String_from(str->ptr, i);
+    *result = str_from(str->ptr, i);
   }
 
   str->len -= i + 1;
@@ -51,7 +51,7 @@ bool String_try_chop_by_delim(String *str, char delim, String *result) {
   return true;
 }
 
-void String_println(String str) {
+void str_println(String str) {
   for (int i = 0; i < str.len; ++i) {
     putchar(str.ptr[i]);
   }

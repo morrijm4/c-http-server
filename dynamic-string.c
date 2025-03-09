@@ -27,7 +27,7 @@ bool ds_arena_clone(Arena *arena, DynamicString *ds, String *str)
 
 bool ds_arena_clone_cstr(Arena *arena, DynamicString *ds, const char *str)
 {
-    String tmp = String_from_cstr(str);
+    String tmp = str_from_cstr(str);
     if (!ds_arena_clone(arena, ds, &tmp)) return false;
     return true;
 }
