@@ -4,10 +4,10 @@
 #include <string.h>
 
 #include "dynamic-string.c"
+#include "error.c"
 #include "string.c"
 
 typedef enum {
-    ERROR,
     GET,
     HEAD,
 } Method;
@@ -19,9 +19,9 @@ typedef struct {
 } Request;
 
 bool parse_method(String str, Method *method) {
-    if (str_eq(str, str_from_cstr("GET"))) {
+    if (str_eq_cstr(str, "GET")) {
       *method = GET;
-    } else if (str_eq(str, str_from_cstr("HEAD"))) {
+    } else if (str_eq_cstr(str, "HEAD")) {
       *method = HEAD;
     } else {
       // TODO: log unknown header
@@ -29,6 +29,18 @@ bool parse_method(String str, Method *method) {
     }
  
     return true;
+}
+
+const char *get_method_cstr(Method method)
+{
+    switch (method) {
+	case HEAD:
+	    return "HEAD";
+	case GET:
+	    return "GET";
+	default:
+	    error_fail("Unknown method in get_method_cstr");
+    }
 }
 
 bool process_request(Arena *arena, FILE *stream, Request *req) 
@@ -82,7 +94,7 @@ void print_request(Request *req)
     fprintf(stderr, "============= Parsed Response =============\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "Version: %.*s\n", req->version.len, req->version.ptr);
-    fprintf(stderr, " Method: %d\n", req->method);
+    fprintf(stderr, " Method: %s (%d)\n", get_method_cstr(req->method), req->method);
     fprintf(stderr, "    URL: %.*s\n", req->url.len, req->url.ptr);
     fprintf(stderr, "\n");
 }
