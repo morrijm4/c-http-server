@@ -49,12 +49,13 @@ void print_address(struct sockaddr_storage *addr) {
 
     inet_ntop(AF_INET, &tmp->sin_addr, ip, INET_ADDRSTRLEN);
 
-    printf("\n");
-    printf("(Address) length: %d\n", tmp->sin_len);
-    printf("(Address) family: IPv4 (%d)\n", tmp->sin_family);
-    printf("(Address)     IP: %s\n", ip);
-    printf("(Address)   port: %d\n", ntohs(tmp->sin_port));
-    printf("\n");
+    fprintf(stderr, "============= Client Address =============\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "(Address) length: %d\n", tmp->sin_len);
+    fprintf(stderr, "(Address) family: IPv4 (%d)\n", tmp->sin_family);
+    fprintf(stderr, "(Address)     IP: %s\n", ip);
+    fprintf(stderr, "(Address)   port: %d\n", ntohs(tmp->sin_port));
+    fprintf(stderr, "\n");
 
     break;
   }

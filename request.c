@@ -38,9 +38,15 @@ bool process_request(Arena *arena, FILE *stream, Request *req)
 
     if ((linelen = getline(&linebuf, &linecap, stream)) < 0) return perror_false("getline");
 
+#ifdef LOG_REQUEST
+	fprintf(stderr, "\n");
+	fprintf(stderr, "============= Request =============\n");
+	fprintf(stderr, "\n");
+	fprintf(stderr, "%s", linebuf);
+#endif // LOG_REQUEST
+
     String token;
     String line = String_from(linebuf, linelen);
-
     // parse method
     if (!String_try_chop_by_delim(&line, ' ', &token)) return error_false("Cannot get method");
     parse_method(token, &req->method); 
@@ -53,9 +59,12 @@ bool process_request(Arena *arena, FILE *stream, Request *req)
     if (!String_try_chop_by_delim(&line, '\n', &token)) return error_false("Cannot get version");
     if (!ds_arena_clone(arena, &req->version, &token)) return false;
 
-
     while ((linelen = getline(&linebuf, &linecap, stream)) > 0) {
-        if (strcmp("\r\n", linebuf)) break;
+#ifdef LOG_REQUEST
+	fprintf(stderr,"%s", linebuf);
+#endif // LOG_REQUEST
+
+        if (strcmp("\r\n", linebuf) == 0) break;
 
         line = String_from(linebuf, linelen);
     }
@@ -69,9 +78,10 @@ bool process_request(Arena *arena, FILE *stream, Request *req)
 
 void print_request(Request *req) 
 {
-    printf("\n");
-    printf("(Request)  Method: %d\n", req->method);
-    printf("(Request)     URL: %.*s\n", req->url.len, req->url.ptr);
-    printf("(Request) Version: %.*s\n", req->version.len, req->version.ptr);
-    printf("\n");
+    fprintf(stderr, "============= Parsed Response =============\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "Version: %.*s\n", req->version.len, req->version.ptr);
+    fprintf(stderr, " Method: %d\n", req->method);
+    fprintf(stderr, "    URL: %.*s\n", req->url.len, req->url.ptr);
+    fprintf(stderr, "\n");
 }

@@ -7,6 +7,11 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#define LOG_CLIENT_ADDRESS
+#define LOG_REQUEST
+#define LOG_PARSED_REQUEST
+#define LOG_RESPONSE
+
 #include "arena.c"
 #include "request.c"
 #include "response.c"
@@ -37,8 +42,9 @@ int main()
           return EXIT_FAILURE;
         }
 
-	printf("========== Incoming request ========== \n");
+#ifdef LOG_CLIENT_ADDRESS
         print_address(&client_address);
+#endif // LOG_CLIENT_ADDRESS
 
 	// Create file stream for reading 
 	FILE *read_stream = fdopen(dup(conn_fd), "r");
@@ -53,7 +59,9 @@ int main()
         if (!process_request(&arena, read_stream, &req)) return EXIT_FAILURE;
 	fclose(read_stream);
 
+#ifdef LOG_PARSED_REQUEST
 	print_request(&req);
+#endif // LOG_PARSED_REQUEST
        
 	// Create file stream for writing 
 	FILE *write_stream = fdopen(dup(conn_fd), "w");
