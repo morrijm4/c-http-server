@@ -67,8 +67,12 @@ bool send_response(Arena *arena, FILE *stream, Request *req) {
     Response res = {0};
     if (!create_response(arena, req, &res)) return false;
 
+#ifdef LOG_RESPONSE
+    fprintf(stderr, "============= Response =============\n");
+    fprintf(stderr, "\n");
     write_response(stderr, &res);
     fprintf(stderr, "\n");
+#endif // LOG_RESPONSE
 
     write_response(stream, &res);
 
