@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "dynamic-string.c"
+#include "string.c"
 
 typedef enum {
     ERROR,
@@ -18,9 +19,9 @@ typedef struct {
 } Request;
 
 bool parse_method(String str, Method *method) {
-    if (String_eq(str, String_from_cstr("GET"))) {
+    if (str_eq(str, str_from_cstr("GET"))) {
       *method = GET;
-    } else if (String_eq(str, String_from_cstr("HEAD"))) {
+    } else if (str_eq(str, str_from_cstr("HEAD"))) {
       *method = HEAD;
     } else {
       // TODO: log unknown header
@@ -46,17 +47,17 @@ bool process_request(Arena *arena, FILE *stream, Request *req)
 #endif // LOG_REQUEST
 
     String token;
-    String line = String_from(linebuf, linelen);
+    String line = str_from(linebuf, linelen);
     // parse method
-    if (!String_try_chop_by_delim(&line, ' ', &token)) return error_false("Cannot get method");
+    if (!str_try_chop_by_delim(&line, ' ', &token)) return error_false("Cannot get method");
     parse_method(token, &req->method); 
 
     // parse URL
-    if (!String_try_chop_by_delim(&line, ' ', &token)) return error_false("Cannot get url");
+    if (!str_try_chop_by_delim(&line, ' ', &token)) return error_false("Cannot get url");
     if (!ds_arena_clone(arena, &req->url, &token)) return false;
 
     // parse version
-    if (!String_try_chop_by_delim(&line, '\n', &token)) return error_false("Cannot get version");
+    if (!str_try_chop_by_delim(&line, '\n', &token)) return error_false("Cannot get version");
     if (!ds_arena_clone(arena, &req->version, &token)) return false;
 
     while ((linelen = getline(&linebuf, &linecap, stream)) > 0) {
@@ -66,7 +67,7 @@ bool process_request(Arena *arena, FILE *stream, Request *req)
 
         if (strcmp("\r\n", linebuf) == 0) break;
 
-        line = String_from(linebuf, linelen);
+        line = str_from(linebuf, linelen);
     }
 
     free(linebuf);
