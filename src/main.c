@@ -70,7 +70,7 @@ int main()
 	    return EXIT_FAILURE;
 	}
 
-        // write request
+        // write request and ignore if error if fails
 	send_response(&arena, write_stream, &req);
 
 

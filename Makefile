@@ -1,7 +1,7 @@
-SRC = arena.c dynamic-string.c error.c main.c math.c request.c response.c string.c tcp.c
+SRC = $(wildcard src/*.c)
 
 build: $(SRC)
-	gcc main.c -o run -Wall -Werror
+	gcc src/main.c -o run -Wall -Werror
 
 run: build
 	./run
