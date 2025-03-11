@@ -14,3 +14,15 @@ uint64_t hash_djb2(String str)
 
     return hash;
 }
+
+uint64_t hash_djb2_cstr(const char *str)
+{
+    uint64_t hash = 5381;
+    char c;
+
+    while ((c = *str++)) {
+	hash = ((hash << 5) + hash) + c; // hash * 33 + c
+    }
+
+    return hash;
+}
