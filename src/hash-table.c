@@ -12,25 +12,20 @@ typedef struct {
     String key;
     void *value;
     void *next;
-} Node;
+} HashNode;
 
 typedef struct {
-    Node *arr;
+    HashNode *arr;
     size_t len;
 } HashTable;
 
-void ht_init(HashTable *ht, size_t len)
-{
-    memset(ht->arr, 0, sizeof(Node) * len);
-    ht->len = len;
-}
-
-HashTable ht_init_with_arena(Arena *arena, size_t size)
+HashTable ht_init(Arena *arena, size_t len)
 {
     HashTable ht;
 
-    ht.arr = arena_alloc(arena, sizeof(Node) * size);
-    ht_init(&ht, size);
+    ht.arr = arena_alloc(arena, sizeof(HashNode) * len);
+    memset(ht.arr, 0, sizeof(HashNode) * len);
+    ht.len = len;
 
     return ht;
 }
