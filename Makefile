@@ -9,5 +9,5 @@ build: $(SRC)
 run: build
 	./run
 
-t: test/main.c test/utils.c test/hash.test.c
+t: $(SRC) $(TEST)
 	$(CC) test/main.c -o t $(CFLAGS) && ./t && rm ./t
