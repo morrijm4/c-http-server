@@ -7,9 +7,9 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#define LOG_CLIENT_ADDRESS
+// #define LOG_CLIENT_ADDRESS
 #define LOG_REQUEST
-#define LOG_PARSED_REQUEST
+// #define LOG_PARSED_REQUEST
 #define LOG_RESPONSE
 
 #include "arena.c"

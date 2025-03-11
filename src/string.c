@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "arena.c"
+
 typedef struct {
     const char *ptr;
     int len;
@@ -65,4 +67,23 @@ void str_println(String str)
 	putchar(str.ptr[i]);
     }
     putchar('\n');
+}
+
+bool str_clone_with_arena(Arena *arena, String *dst, String *src)
+{
+    dst->len      = src->len;
+    dst->ptr      = arena_alloc(arena, src->len * sizeof(char));
+
+    if (dst->ptr == NULL) return error_false("Arena out of memory");
+
+    memcpy((void *)dst->ptr, src->ptr, src->len);
+
+    return true;
+}
+
+bool str_clone_cstr_with_arena(Arena *arena, String *dst, const char *src)
+{
+    String tmp = str_from_cstr(src);
+    if (!str_clone_with_arena(arena, dst, &tmp)) return false;
+    return true;
 }

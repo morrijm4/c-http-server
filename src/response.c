@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include "dynamic-string.c"
 #include "request.c"
 #include "arena.c"
 
@@ -17,8 +16,8 @@ typedef struct {
 
 typedef struct {
     Status status;
-    DynamicString body;
-    DynamicString contentType;
+    String body;
+    String contentType;
 } Response;
 
 bool create_status(StatusCode code, Response *res) 
@@ -30,11 +29,12 @@ bool create_status(StatusCode code, Response *res)
 	case 204:
 	    res->status.msg = "No Content";
 	    break;
-
 	case 400:
 	    res->status.msg = "Bad Request";
 	    break;
-
+	case 501:
+	    res->status.msg = "Not implemented";
+	    break;;
 	default:
 	    fprintf(stderr, "Unknown status code %d\n", code);
 	    return false;
@@ -44,20 +44,31 @@ bool create_status(StatusCode code, Response *res)
     return true;
 }
 
+bool create_501_not_implemented_response(Response *res)
+{
+    if (!create_status(501, res)) return false;
+    return true;
+}
+
 bool create_response(Arena *arena, Request *req, Response *res)
 {
+    if (req->method == UNKNOWN) {
+	create_501_not_implemented_response(res);
+	return true;
+    }
+
     if (!create_status(200, res)) return false;
 
-    ds_arena_clone_cstr(arena, &res->body, "<div>Hello world<div>");
-    ds_arena_clone_cstr(arena, &res->contentType, "text/html");
+    str_clone_cstr_with_arena(arena, &res->body, "<div>Hello world<div>");
+    str_clone_cstr_with_arena(arena, &res->contentType, "text/html");
 
     return true;
 }
 
 bool write_response(FILE* stream, Response *res) {
     fprintf(stream, "HTTP/1.1 %d %s\r\n", res->status.code, res->status.msg);
-    fprintf(stream, "Content-Type: %.*s\r\n", res->contentType.len, res->contentType.ptr);
-    fprintf(stream, "Content-Length: %d\r\n", res->body.len);
+    // fprintf(stream, "Content-Type: %.*s\r\n", res->contentType.len, res->contentType.ptr);
+    // fprintf(stream, "Content-Length: %d\r\n", res->body.len);
     fprintf(stream, "\r\n");
     fprintf(stream, "%.*s", res->body.len, res->body.ptr);
     return true;

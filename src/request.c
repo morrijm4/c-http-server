@@ -3,29 +3,28 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "dynamic-string.c"
 #include "error.c"
 #include "string.c"
 
 typedef enum {
+    UNKNOWN,
     GET,
     HEAD,
 } Method;
 
 typedef struct {
     Method method;
-    DynamicString url;
-    DynamicString version;
+    String url;
+    String version;
 } Request;
 
 bool parse_method(String str, Method *method) {
     if (str_eq_cstr(str, "GET")) {
-      *method = GET;
+        *method = GET;
     } else if (str_eq_cstr(str, "HEAD")) {
-      *method = HEAD;
+        *method = HEAD;
     } else {
-      // TODO: log unknown header
-      return false;
+	*method = UNKNOWN;
     }
  
     return true;
@@ -38,6 +37,8 @@ const char *get_method_cstr(Method method)
 	    return "HEAD";
 	case GET:
 	    return "GET";
+	case UNKNOWN:
+	    return "UNKNOWN";
 	default:
 	    error_fail("Unknown method in get_method_cstr");
     }
@@ -66,11 +67,11 @@ bool process_request(Arena *arena, FILE *stream, Request *req)
 
     // parse URL
     if (!str_try_chop_by_delim(&line, ' ', &token)) return error_false("Cannot get url");
-    if (!ds_arena_clone(arena, &req->url, &token)) return false;
+    if (!str_clone_with_arena(arena, &req->url, &token)) return false;
 
     // parse version
     if (!str_try_chop_by_delim(&line, '\n', &token)) return error_false("Cannot get version");
-    if (!ds_arena_clone(arena, &req->version, &token)) return false;
+    if (!str_clone_with_arena(arena, &req->version, &token)) return false;
 
     while ((linelen = getline(&linebuf, &linecap, stream)) > 0) {
 #ifdef LOG_REQUEST
