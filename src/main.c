@@ -12,12 +12,10 @@
 // #define LOG_PARSED_REQUEST
 #define LOG_RESPONSE
 
-#include "arena.c"
+#include "stack-arena.c"
 #include "request.c"
 #include "response.c"
 #include "tcp.c"
-
-#define ARENA_SIZE 1024
 
 int main() 
 {
@@ -29,8 +27,7 @@ int main()
     socklen_t addr_size = sizeof(client_address);
     
     // Initialize arena allocator
-    Arena arena;
-    arena_init(&arena, ARENA_SIZE);
+    StackArena arena = sa_init();
  
     for (;;) {
         memset(&client_address, 0, addr_size);
@@ -76,10 +73,8 @@ int main()
 
 	fclose(write_stream);
 	close(conn_fd);
-	arena_reset(&arena);
+	sa_reset(&arena);
     }
- 
-    arena_free(&arena);
-    close(socket_fd);
+
     return EXIT_SUCCESS;
 }

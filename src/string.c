@@ -5,7 +5,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "arena.c"
+#include "stack-arena.c"
+
+#define str_null str_from(NULL, 0)
 
 typedef struct {
     const char *ptr;
@@ -33,6 +35,11 @@ bool str_eq(String a, String b)
     } else {
         return memcmp(a.ptr, b.ptr, a.len) == 0;
     }
+}
+
+bool str_is_null(String str)
+{
+    return str_eq(str, str_null);
 }
 
 bool str_eq_cstr(String a, const char *b) 
@@ -69,21 +76,19 @@ void str_println(String str)
     putchar('\n');
 }
 
-bool str_clone_with_arena(Arena *arena, String *dst, String *src)
+bool str_clone_with_stack_arena(StackArena *sa, String *dst, String *src)
 {
-    dst->len      = src->len;
-    dst->ptr      = arena_alloc(arena, src->len * sizeof(char));
-
-    if (dst->ptr == NULL) return error_false("Arena out of memory");
+    dst->len = src->len;
+    if (!sa_alloc(sa, src->len * sizeof(char), (void **)&dst->ptr)) return false;
 
     memcpy((void *)dst->ptr, src->ptr, src->len);
 
     return true;
 }
 
-bool str_clone_cstr_with_arena(Arena *arena, String *dst, const char *src)
+bool str_clone_cstr_with_stack_arena(StackArena *sa, String *dst, const char *src)
 {
     String tmp = str_from_cstr(src);
-    if (!str_clone_with_arena(arena, dst, &tmp)) return false;
+    if (!str_clone_with_stack_arena(sa, dst, &tmp)) return false;
     return true;
 }

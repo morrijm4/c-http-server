@@ -5,6 +5,7 @@
 
 #include "error.c"
 #include "string.c"
+#include "stack-arena.c"
 
 typedef enum {
     UNKNOWN,
@@ -44,7 +45,7 @@ const char *get_method_cstr(Method method)
     }
 }
 
-bool process_request(Arena *arena, FILE *stream, Request *req) 
+bool process_request(StackArena *sa, FILE *stream, Request *req)
 {
     char *linebuf = NULL;
     size_t linecap = 0;
@@ -67,11 +68,11 @@ bool process_request(Arena *arena, FILE *stream, Request *req)
 
     // parse URL
     if (!str_try_chop_by_delim(&line, ' ', &token)) return error_false("Cannot get url");
-    if (!str_clone_with_arena(arena, &req->url, &token)) return false;
+    if (!str_clone_with_stack_arena(sa, &req->url, &token)) return false;
 
     // parse version
     if (!str_try_chop_by_delim(&line, '\n', &token)) return error_false("Cannot get version");
-    if (!str_clone_with_arena(arena, &req->version, &token)) return false;
+    if (!str_clone_with_stack_arena(sa, &req->version, &token)) return false;
 
     while ((linelen = getline(&linebuf, &linecap, stream)) > 0) {
 #ifdef LOG_REQUEST

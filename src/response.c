@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 #include "request.c"
-#include "arena.c"
+#include "stack-arena.c"
 
 typedef uint16_t StatusCode;
 
@@ -50,7 +50,7 @@ bool create_501_not_implemented_response(Response *res)
     return true;
 }
 
-bool create_response(Arena *arena, Request *req, Response *res)
+bool create_response(StackArena *sa, Request *req, Response *res)
 {
     if (req->method == UNKNOWN) {
 	create_501_not_implemented_response(res);
@@ -59,8 +59,8 @@ bool create_response(Arena *arena, Request *req, Response *res)
 
     if (!create_status(200, res)) return false;
 
-    str_clone_cstr_with_arena(arena, &res->body, "<div>Hello world<div>");
-    str_clone_cstr_with_arena(arena, &res->contentType, "text/html");
+    str_clone_cstr_with_stack_arena(sa, &res->body, "<div>Hello world<div>");
+    str_clone_cstr_with_stack_arena(sa, &res->contentType, "text/html");
 
     return true;
 }
@@ -74,9 +74,9 @@ bool write_response(FILE* stream, Response *res) {
     return true;
 }
 
-bool send_response(Arena *arena, FILE *stream, Request *req) {
+bool send_response(StackArena *sa, FILE *stream, Request *req) {
     Response res = {0};
-    if (!create_response(arena, req, &res)) return false;
+    if (!create_response(sa, req, &res)) return false;
 
 #ifdef LOG_RESPONSE
     fprintf(stderr, "============= Response =============\n");

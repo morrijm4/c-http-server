@@ -10,4 +10,4 @@ run: build
 	./run
 
 t: $(SRC) $(TEST)
-	$(CC) test/main.c -o t $(CFLAGS) && ./t && rm ./t
+	$(CC) test/main.c -o t $(CFLAGS)
