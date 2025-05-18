@@ -85,8 +85,9 @@ bool process_request(StackArena *sa, FILE *stream, Request *req)
     }
 
     free(linebuf);
-    if (fclose(stream) == EOF) return perror_false("fclose");
-    if (ferror(stream)) return perror_false("getline");
+    linebuf = NULL;
+
+    if (ferror(stream) < 0) return perror_false("getline");
 
     return true;
 }

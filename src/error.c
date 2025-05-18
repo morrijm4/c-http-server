@@ -33,3 +33,8 @@ bool perror_false(const char *msg)
     return false;
 }
 
+int perror_int(const char *msg)
+{
+    perror(msg);
+    return EXIT_FAILURE;
+}

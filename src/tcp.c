@@ -6,39 +6,31 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 
+#include "error.c"
+
 #define PORT 8080
 #define LISTEN_BACKLOG 128
 
-int get_tcp_socket() {
+bool get_tcp_socket(int *socket_ptr) {
   int socket_fd;
   int yes = 1;
 
-  if ((socket_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-    perror("socket");
-    exit(EXIT_FAILURE);
-  }
+  if ((socket_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) return perror_false("socket");
   
-  if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) < 0) {
-    perror("setsockopt");
-    exit(EXIT_FAILURE);
-  }
+  if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) < 0) return perror_false("setsockopt");
 
   struct sockaddr_in hostaddr = {0};
   hostaddr.sin_family = AF_INET;
   hostaddr.sin_port = htons(PORT);
-  inet_pton(AF_INET, "127.0.0.1", &hostaddr.sin_addr);
+  hostaddr.sin_addr.s_addr = INADDR_ANY;
 
-  if ((bind(socket_fd, (struct sockaddr *)&hostaddr, sizeof(struct sockaddr_in))) < 0) {
-    perror("bind");
-    exit(EXIT_FAILURE);
-  }
+  if ((bind(socket_fd, (struct sockaddr *)&hostaddr, sizeof(struct sockaddr_in))) < 0) return perror_false("bind");
 
-  if ((listen(socket_fd, LISTEN_BACKLOG)) < 0) {
-    perror("listen");
-    exit(EXIT_FAILURE);
-  }
+  if ((listen(socket_fd, LISTEN_BACKLOG)) < 0) return perror_false("listen");
 
-  return socket_fd;
+  *socket_ptr = socket_fd;
+
+  return true;
 }
 
 void print_address(struct sockaddr_storage *addr) {
@@ -51,7 +43,9 @@ void print_address(struct sockaddr_storage *addr) {
 
     fprintf(stderr, "============= Client Address =============\n");
     fprintf(stderr, "\n");
+#ifdef __APPLE__
     fprintf(stderr, "(Address) length: %d\n", tmp->sin_len);
+#endif
     fprintf(stderr, "(Address) family: IPv4 (%d)\n", tmp->sin_family);
     fprintf(stderr, "(Address)     IP: %s\n", ip);
     fprintf(stderr, "(Address)   port: %d\n", ntohs(tmp->sin_port));

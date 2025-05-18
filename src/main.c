@@ -19,7 +19,8 @@
 
 int main() 
 {
-    int socket_fd = get_tcp_socket();
+    int socket_fd;
+    if (!get_tcp_socket(&socket_fd)) return EXIT_FAILURE;
  
     printf("Listening at http://localhost:%d\n", PORT);
  
@@ -34,10 +35,7 @@ int main()
        
         int conn_fd = accept(socket_fd, (struct sockaddr *)&client_address, &addr_size);
        
-        if (conn_fd < 0) {
-          perror("accept");
-          return EXIT_FAILURE;
-        }
+        if (conn_fd < 0) return perror_int("accept");
 
 #ifdef LOG_CLIENT_ADDRESS
         print_address(&client_address);
@@ -45,16 +43,13 @@ int main()
 
 	// Create file stream for reading 
 	FILE *read_stream = fdopen(dup(conn_fd), "r");
-	if (read_stream == NULL) {
-	    perror("fdopen");
-	    return EXIT_FAILURE;
-	}
+	if (read_stream == NULL) return perror_int("fdopen read_stream");
 
        
         // read request
 	Request req = {0};
         if (!process_request(&arena, read_stream, &req)) return EXIT_FAILURE;
-	fclose(read_stream);
+	if (fclose(read_stream)) return perror_int("fclose read_stream");
 
 #ifdef LOG_PARSED_REQUEST
 	print_request(&req);
@@ -62,17 +57,15 @@ int main()
        
 	// Create file stream for writing 
 	FILE *write_stream = fdopen(dup(conn_fd), "w");
-	if (write_stream == NULL) {
-	    perror("fdopen");
-	    return EXIT_FAILURE;
-	}
+	if (write_stream == NULL) return perror_int("fdopen write_stream");
 
         // write request and ignore if error if fails
-	send_response(&arena, write_stream, &req);
+	if (!send_response(&arena, write_stream, &req)) return EXIT_FAILURE;
 
 
-	fclose(write_stream);
-	close(conn_fd);
+	if (fclose(write_stream)) return perror_int("fclose read_stream");
+	if (close(conn_fd)) return perror_int("close conn_fd");
+
 	sa_reset(&arena);
     }
 
