@@ -40,9 +40,9 @@ const char *get_method_cstr(Method method)
 	    return "GET";
 	case UNKNOWN:
 	    return "UNKNOWN";
-	default:
-	    error_fail("Unknown method in get_method_cstr");
     }
+
+    error_fail("Unknown method in get_method_cstr");
 }
 
 bool process_request(StackArena *sa, FILE *stream, Request *req)

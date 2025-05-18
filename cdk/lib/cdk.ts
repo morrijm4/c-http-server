@@ -39,7 +39,7 @@ class WebServer extends core.Stack {
     });
 
     instance.connections.allowFromAnyIpv4(ec2.Port.SSH, 'Allow ssh ingress');
-    instance.connections.allowFromAnyIpv4(ec2.Port.tcp(80), 'Allow dev http ingress');
+    instance.connections.allowFromAnyIpv4(ec2.Port.tcp(8080), 'Allow dev http ingress');
     instance.connections.allowToAnyIpv4(ec2.Port.HTTPS, 'Allow all internet egress');
 
     new core.CfnOutput(this, 'public-ip', {
