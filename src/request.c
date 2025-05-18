@@ -42,7 +42,8 @@ const char *get_method_cstr(Method method)
 	    return "UNKNOWN";
     }
 
-    error_fail("Unknown method in get_method_cstr");
+    print_stderr("Unknown method in get_method_cstr");
+    exit(1);
 }
 
 bool process_request(StackArena *sa, FILE *stream, Request *req)
